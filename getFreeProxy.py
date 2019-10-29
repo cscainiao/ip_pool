@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+import hashlib
 import json
 import logging
 import random
 import re
 import time
 
+import execjs
 import redis
 import requests
 from lxml import etree
@@ -367,6 +369,39 @@ class GetFreeProxy(object):
             for proxy in proxies:
                 yield ':'.join(proxy)
 
+    @staticmethod
+    def freeProxy15():
+        """
+        零度代理
+        """
+        def get_token(page, timestamp):
+            token = str(page) + '15' + str(timestamp)
+            hl = hashlib.md5()
+            hl.update(token.encode(encoding='utf-8'))
+            return hl.hexdigest()
+
+        node = execjs.get()
+        ctx = node.compile(open('js/nyloner.js').read())
+        session = requests.session()
+        session.get('https://nyloner.cn/proxy', headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
+        })
+        for page in range(1, 11):
+            try:
+                timestamp = int(time.time())
+                token = get_token(page, timestamp)
+                url = 'https://nyloner.cn/proxy?page=%s&num=15&token=%s&t=%s' % (page, token, timestamp)
+
+                resp = session.get(url, timeout=5)
+                list_str = resp.json()['list']
+                list_str = ctx.call("decode_str", list_str)
+                data_json = json.loads(list_str)
+                for ip_info in data_json:
+                    yield ip_info['ip'] + ':' + ip_info['port']
+            except:
+                time.sleep(2)
+
+
 
 class CheckProxy(object):
 
@@ -468,6 +503,10 @@ if __name__ == '__main__':
                 CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy14)
             except Exception as e:
                 logging.error('freeProxy14 error %s '% e)
+            try:
+                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy15)
+            except Exception as e:
+                logging.error('freeProxy15 error %s ' % e)
             time.sleep(60*60*1)
 
 
