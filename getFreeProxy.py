@@ -13,11 +13,14 @@ from lxml import etree
 from requests import Response
 # for debug to disable insecureWarning
 import setting
+import os
+
+log_file_name = os.path.join(setting.log_dir, 'getFreeIp.log')
 
 requests.packages.urllib3.disable_warnings()
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-                    level=logging.INFO)
+                    level=logging.INFO, filename=log_file_name)
 IP_REDIS_KEY_NOT_VALID = setting.NOT_VALID_IP_REDIS_KEY
 
 
@@ -418,7 +421,7 @@ class CheckProxy(object):
         count = 0
         for proxy in func():
             if verifyProxyFormat(proxy):
-                logging.info("{} fetch proxy: {}".format(func_name, proxy))
+                # logging.info("{} fetch proxy: {}".format(func_name, proxy))
                 redis_obj.rpush(IP_REDIS_KEY_NOT_VALID, json.dumps({'ip': proxy, 'score': 10}))
                 count += 1
         logging.info("----------------------------{n} completed, fetch proxy number: {c}-----------------------------".format(n=func_name, c=count))
@@ -441,42 +444,42 @@ if __name__ == '__main__':
         redis_obj = redis.Redis(password=setting.REDIS_PWD)
         CheckProxy = CheckProxy()
         while True:
-            # try:
-            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy01)
-            # except Exception as e:
-            #     logging.error('freeProxy01 error %s '% e)
-            # try:
-            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy02)
-            # except Exception as e:
-            #     logging.error('freeProxy02 error %s ' % e)
-            # try:
-            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy03)
-            # except Exception as e:
-            #     logging.error('freeProxy03 error %s '% e)
-            # try:
-            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy04)
-            # except Exception as e:
-            #     logging.error('freeProxy04 error %s '% e)
-            # try:
-            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy05)
-            # except Exception as e:
-            #     logging.error('freeProxy05 error %s '% e)
-            # try:
-            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy07)
-            # except Exception as e:
-            #     logging.error('freeProxy07 error %s ' % e)
-            #
-            # try:
-            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy09)
-            # except Exception as e:
-            #     logging.error('freeProxy09 error %s '% e)
-            # try:
-            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy13)
-            # except Exception as e:
-            #     logging.error('freeProxy13 error %s '% e)
-            # try:
-            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy14)
-            # except Exception as e:
-            #     logging.error('freeProxy14 error %s '% e)
+            try:
+                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy01)
+            except Exception as e:
+                logging.error('freeProxy01 error %s '% e)
+            try:
+                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy02)
+            except Exception as e:
+                logging.error('freeProxy02 error %s ' % e)
+            try:
+                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy03)
+            except Exception as e:
+                logging.error('freeProxy03 error %s '% e)
+            try:
+                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy04)
+            except Exception as e:
+                logging.error('freeProxy04 error %s '% e)
+            try:
+                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy05)
+            except Exception as e:
+                logging.error('freeProxy05 error %s '% e)
+            try:
+                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy07)
+            except Exception as e:
+                logging.error('freeProxy07 error %s ' % e)
+
+            try:
+                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy09)
+            except Exception as e:
+                logging.error('freeProxy09 error %s '% e)
+            try:
+                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy13)
+            except Exception as e:
+                logging.error('freeProxy13 error %s '% e)
+            try:
+                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy14)
+            except Exception as e:
+                logging.error('freeProxy14 error %s '% e)
 
             time.sleep(60*60*1)

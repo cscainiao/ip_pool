@@ -1,4 +1,5 @@
 import json
+import os
 import time
 import setting
 import requests
@@ -9,8 +10,10 @@ from multiprocessing import Process
 
 import logging
 
+log_file_name = os.path.join(setting.log_dir, 'testIpBaidu.log')
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-                    level=logging.INFO, filename='baidu_log.txt')
+                    level=logging.INFO, filename=log_file_name)
 
 
 class IpTest:

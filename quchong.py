@@ -4,6 +4,7 @@ import redis
 
 import setting
 
+
 def run():
     redis_obj = redis.Redis(password=setting.REDIS_PWD)
     data_not_valid = set(redis_obj.lrange(setting.NOT_VALID_IP_REDIS_KEY,1,10000000))
