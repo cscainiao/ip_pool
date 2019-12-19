@@ -17,7 +17,7 @@ import setting
 requests.packages.urllib3.disable_warnings()
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-                    level=logging.INFO, filename='get_free_proxy_log.txt')
+                    level=logging.INFO)
 IP_REDIS_KEY_NOT_VALID = setting.NOT_VALID_IP_REDIS_KEY
 
 
@@ -146,46 +146,20 @@ class GetFreeProxy(object):
                     print(e)
 
     @staticmethod
-    def freeProxy02(count=20):
+    def freeProxy02(count=300):
         """
         代理66 http://www.66ip.cn/
         :param count: 提取数量
         :return:
         """
         urls = [
-            "http://www.66ip.cn/mo.php?sxb=&tqsl={}&port=&export=&ktip=&sxa=&submit=%CC%E1++%C8%A1&textarea=",
-            "http://www.66ip.cn/nmtq.php?getnum={}&isp=0&anonymoustype=0&s"
-            "tart=&ports=&export=&ipaddress=&area=0&proxytype=2&api=66ip"
+            'http://www.66ip.cn/mo.php?sxb=&tqsl={}&port=&export=&ktip=&sxa=&submit=%CC%E1++%C8%A1&textarea='.format(count),
+            'http://www.66ip.cn/nmtq.php?getnum={}&isp=0&anonymoustype=0&start=&ports=&export=&ipaddress=&area=0&proxytype=2&api=66ip'.format(count)
         ]
-
-        try:
-            import execjs
-            import requests
-
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:34.0) Gecko/20100101 Firefox/34.0',
-                       'Accept': '*/*',
-                       'Connection': 'keep-alive',
-                       'Accept-Language': 'zh-CN,zh;q=0.8'}
-            session = requests.session()
-            src = session.get("http://www.66ip.cn/", headers=headers).text
-            src = src.split("</script>")[0] + '}'
-            src = src.replace("<script>", "function test() {")
-            src = src.replace("while(z++)try{eval(", ';var num=10;while(z++)try{var tmp=')
-            src = src.replace(");break}", ";num--;if(tmp.search('cookie') != -1 | num<0){return tmp}}")
-            ctx = execjs.compile(src)
-            src = ctx.call("test")
-            src = src[src.find("document.cookie="): src.find("};if((")]
-            src = src.replace("document.cookie=", "")
-            src = "function test() {var window={}; return %s }" % src
-            cookie = execjs.compile(src).call('test')
-            js_cookie = cookie.split(";")[0].split("=")[-1]
-        except Exception as e:
-            print(e)
-            return
 
         for url in urls:
             try:
-                html = session.get(url.format(count), cookies={"__jsl_clearance": js_cookie}, headers=headers).text
+                html = requests.get(url).text
                 ips = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}", html)
                 for ip in ips:
                     yield ip.strip()
@@ -252,26 +226,27 @@ class GetFreeProxy(object):
                 pass
 
     @staticmethod
-    def freeProxy05():
+    def freeProxy05(page=10):
         """
         快代理 https://www.kuaidaili.com
         """
         url_list = [
-            'https://www.kuaidaili.com/free/inha/',
-            'https://www.kuaidaili.com/free/intr/'
+            'https://www.kuaidaili.com/free/inha/%s/',
+            'https://www.kuaidaili.com/free/intr/%s/'
         ]
         for url in url_list:
-            tree = getHtmlTree(url)
-            proxy_list = tree.xpath('.//table//tr')
-            time.sleep(1)  # 必须sleep 不然第二条请求不到数据
-            for tr in proxy_list[1:]:
-                yield ':'.join(tr.xpath('./td/text()')[0:2])
+            for p in range(1, page):
+                tree = getHtmlTree(url % p)
+                proxy_list = tree.xpath('.//table//tr')
+                time.sleep(1)  # 必须sleep 不然第二条请求不到数据
+                for tr in proxy_list[1:]:
+                    yield ':'.join(tr.xpath('./td/text()')[0:2])
 
     @staticmethod
     def freeProxy06():
         """
         码农代理 https://proxy.coderbusy.com/
-        :return:
+        已经不能打开网页了
         """
         urls = ['https://proxy.coderbusy.com/']
         for url in urls:
@@ -281,25 +256,27 @@ class GetFreeProxy(object):
                 yield ':'.join(tr.xpath('./td/text()')[0:2])
 
     @staticmethod
-    def freeProxy07():
+    def freeProxy07(page=10):
         """
         云代理 http://www.ip3366.net/free/
         :return:
         """
-        urls = ['http://www.ip3366.net/free/?stype=1',
-                "http://www.ip3366.net/free/?stype=2"]
+        urls = ['http://www.ip3366.net/free/?stype=1&page=%s',
+                "http://www.ip3366.net/free/?stype=2&page=%s"]
         request = WebRequest()
         for url in urls:
-            r = request.get(url, timeout=10)
-            proxies = re.findall(r'<td>(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})</td>[\s\S]*?<td>(\d+)</td>', r.text)
-            for proxy in proxies:
-                yield ":".join(proxy)
+            for p in range(1, page):
+                time.sleep(1)
+                r = request.get(url % p, timeout=10)
+                proxies = re.findall(r'<td>(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})</td>[\s\S]*?<td>(\d+)</td>', r.text)
+                for proxy in proxies:
+                    yield ":".join(proxy)
 
     @staticmethod
     def freeProxy08():
         """
         IP海 http://www.iphai.com/free/ng
-        :return:
+        网页打不开了
         """
         urls = [
             'http://www.iphai.com/free/ng',
@@ -318,18 +295,18 @@ class GetFreeProxy(object):
     @staticmethod
     def freeProxy09(page_count=10):
         """
-        http://ip.jiangxianli.com/?page=
-        免费代理库
+        https://www.freeip.top/?page=
+        全球代理：有许多国外的代理
         :return:
         """
         for i in range(1, page_count + 1):
-            url = 'http://ip.jiangxianli.com/?page={}'.format(i)
+            url = 'https://www.freeip.top/?page={}'.format(i)
             html_tree = getHtmlTree(url)
-            tr_list = html_tree.xpath("/html/body/div[1]/div/div[1]/div[2]/table/tbody/tr")
+            tr_list = html_tree.xpath(".//tbody//tr")
             if len(tr_list) == 0:
                 continue
             for tr in tr_list:
-                yield tr.xpath("./td[2]/text()")[0] + ":" + tr.xpath("./td[3]/text()")[0]
+                yield tr.xpath("./td[1]/text()")[0] + ":" + tr.xpath("./td[2]/text()")[0]
 
     @staticmethod
     def freeProxy13(max_page=10):
@@ -372,7 +349,7 @@ class GetFreeProxy(object):
     @staticmethod
     def freeProxy15():
         """
-        零度代理
+        零度代理, 不能使用
         """
         def get_token(page, timestamp):
             token = str(page) + '15' + str(timestamp)
@@ -400,7 +377,6 @@ class GetFreeProxy(object):
                     yield ip_info['ip'] + ':' + ip_info['port']
             except:
                 time.sleep(2)
-
 
 
 class CheckProxy(object):
@@ -465,49 +441,42 @@ if __name__ == '__main__':
         redis_obj = redis.Redis(password=setting.REDIS_PWD)
         CheckProxy = CheckProxy()
         while True:
-            try:
-                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy01)
-            except Exception as e:
-                logging.error('freeProxy01 error %s '% e)
-            # CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy02)
-            try:
-                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy03)
-            except Exception as e:
-                logging.error('freeProxy03 error %s '% e)
-            try:
-                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy04)
-            except Exception as e:
-                logging.error('freeProxy04 error %s '% e)
-            try:
-                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy05)
-            except Exception as e:
-                logging.error('freeProxy05 error %s '% e)
-            # CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy06)
-            try:
-                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy07)
-            except Exception as e:
-                logging.error('freeProxy07 error %s ' % e)
-            try:
-                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy08)
-            except Exception as e:
-                logging.error('freeProxy08 error %s '% e)
-            try:
-                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy09)
-            except Exception as e:
-                logging.error('freeProxy09 error %s '% e)
-            try:
-                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy13)
-            except Exception as e:
-                logging.error('freeProxy13 error %s '% e)
-            try:
-                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy14)
-            except Exception as e:
-                logging.error('freeProxy14 error %s '% e)
-            try:
-                CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy15)
-            except Exception as e:
-                logging.error('freeProxy15 error %s ' % e)
+            # try:
+            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy01)
+            # except Exception as e:
+            #     logging.error('freeProxy01 error %s '% e)
+            # try:
+            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy02)
+            # except Exception as e:
+            #     logging.error('freeProxy02 error %s ' % e)
+            # try:
+            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy03)
+            # except Exception as e:
+            #     logging.error('freeProxy03 error %s '% e)
+            # try:
+            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy04)
+            # except Exception as e:
+            #     logging.error('freeProxy04 error %s '% e)
+            # try:
+            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy05)
+            # except Exception as e:
+            #     logging.error('freeProxy05 error %s '% e)
+            # try:
+            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy07)
+            # except Exception as e:
+            #     logging.error('freeProxy07 error %s ' % e)
+            #
+            # try:
+            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy09)
+            # except Exception as e:
+            #     logging.error('freeProxy09 error %s '% e)
+            # try:
+            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy13)
+            # except Exception as e:
+            #     logging.error('freeProxy13 error %s '% e)
+            # try:
+            #     CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy14)
+            # except Exception as e:
+            #     logging.error('freeProxy14 error %s '% e)
+
             time.sleep(60*60*1)
-
-
-    # CheckProxy.checkAllGetProxyFunc()
