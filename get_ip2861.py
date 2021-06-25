@@ -13,7 +13,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
 
 while True:
     r_loc = redis.Redis(password=setting.REDIS_PWD)
-    r_2861 = redis.Redis(host='120.77.174.5', password='zk1234567890')
+    r_2861 = redis.Redis(host='**', password='**')
 
     data1 = r_2861.lrange('weibo_valid_proxies',1,10000000)
     data2 = r_2861.lrange('weibo_proxies_queue',1,10000000)
